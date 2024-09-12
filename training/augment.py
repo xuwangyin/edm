@@ -116,7 +116,7 @@ class AugmentPipe:
     def __init__(self, p=1,
         xflip=0, yflip=0, rotate_int=0, translate_int=0, translate_int_max=0.125,
         scale=0, rotate_frac=0, aniso=0, translate_frac=0, scale_std=0.2, rotate_frac_max=1, aniso_std=0.2, aniso_rotate_prob=0.5, translate_frac_std=0.125,
-        brightness=0, contrast=0, lumaflip=0, hue=0, saturation=0, brightness_std=0.2, contrast_std=0.5, hue_max=1, saturation_std=1,
+        brightness=0, contrast=0, lumaflip=0, hue=0, saturation=0, brightness_std=0.2, contrast_std=0.5, hue_max=1, saturation_std=1, clamp=False
     ):
         super().__init__()
         self.p                  = float(p)                  # Overall multiplier for augmentation probability.
@@ -149,6 +149,8 @@ class AugmentPipe:
         self.contrast_std       = float(contrast_std)       # Log2 standard deviation of contrast.
         self.hue_max            = float(hue_max)            # Range of hue rotation, 1 = full circle.
         self.saturation_std     = float(saturation_std)     # Log2 standard deviation of saturation.
+
+        self.clamp              = bool(clamp)               # Clamp output images to [0, 1].
 
     def __call__(self, images):
         N, C, H, W = images.shape
@@ -325,6 +327,8 @@ class AugmentPipe:
             images = images.reshape([N, C, H, W])
 
         labels = torch.cat([x.to(torch.float32).reshape(N, -1) for x in labels], dim=1)
+        if self.clamp:
+            images = images.clamp(0, 1)
         return images, labels
 
 #----------------------------------------------------------------------------
